@@ -1,0 +1,42 @@
+<div jx-panel="right">
+
+    <h3>Navigation History</h3>
+
+    <p>
+        lojax uses the URL's hash to track navigation history.
+        To place an item into the browser's navigation history, preface the URL with "#".
+    </p>
+
+    <pre class="html4strict" style="font-family:monospace;"><span style="color: #009900;">&lt;<span style="color: #000000; font-weight: bold;">a</span> <span style="color: #000066;">href</span><span style="color: #66cc66;">=</span><span style="color: #ff0000;">&quot;#navigationhistory.html&quot;</span> <span style="color: #000066;">data-method</span><span style="color: #66cc66;">=</span><span style="color: #ff0000;">&quot;ajax-get&quot;</span>&gt;</span>navigation history<span style="color: #009900;">&lt;<span style="color: #66cc66;">/</span><span style="color: #000000; font-weight: bold;">a</span>&gt;</span></pre>
+
+    <p>
+        lojax handles the "hashchange" event and queries the page for an anchor with a name that matches the hash.
+        If it doesn't find one, it executes an ajax-get using the hash as the URL.
+    </p>
+
+    <p>
+        lojax places a restriction on the hashes it will execute. Hashes must at the very least contain two letters followed by a slash, then two more letters (ab/cd). 
+        Here's the regular expression lojax uses to decide whether a hash is a URL or not:
+    </p>
+
+    <div class="well">
+        <code>/#((.*)?[a-z]{2}\/[a-z]{2}(.*)?)/i</code>
+    </div>
+
+    <p>
+        So what happens when the user clicks the back button all the way to the beginning, removing the hash completely?
+    </p>
+
+    <p>
+        You can configure what happens in this case by setting <a href="#api/emptyhashaction.php" data-method="ajax-get">lojax.emptyHashAction</a>:
+    </p>
+
+    <div class="syntaxhighlighter  js" id="highlighter_901144"><div class="toolbar"><span><a class="toolbar_item command_help help" href="#">?</a></span></div><table border="0" cellspacing="0" cellpadding="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">$(</code><code class="js keyword">function</code> <code class="js plain">() {</code></div><div class="line number2 index1 alt1"><code class="js spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="js plain">lojax.emptyHashAction = </code><code class="js string">'home.php'</code><code class="js plain">;</code></div><div class="line number3 index2 alt2"><code class="js plain">});</code></div></div></td></tr></tbody></table></div>
+
+    <p>
+        Navigation history tracking is disabled by default. Enable it by setting the navHistory configuration setting to true:
+    </p>
+
+    <div class="syntaxhighlighter  js" id="highlighter_800266"><div class="toolbar"><span><a class="toolbar_item command_help help" href="#">?</a></span></div><table border="0" cellspacing="0" cellpadding="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="js plain">lojax.config.navHistory = </code><code class="js keyword">true</code><code class="js plain">;</code></div></div></td></tr></tbody></table></div>
+
+</div>
