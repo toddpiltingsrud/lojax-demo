@@ -30,11 +30,12 @@
 
 <script>
     $(function () {
-        $('ul.nav > li > a').click(function () {
-            $('ul.nav a').removeClass('active');
-            $(this).addClass('active');
-        });
-        $('ul.nav > li ul a,.home-btn').click(function () {
+        $( document ).on( 'click', 'ul.nav > li > a', function () {
+            $( 'ul.nav a' ).removeClass( 'active' );
+            $( this ).addClass( 'active' );
+        } );
+        $( document ).on('click', 'ul.nav > li ul a,.home-btn', function () {
+            console.log( 'here' );
             $('.nav-container').addClass('collapse');
         });
         $('ul.nav').change(function () {

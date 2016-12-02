@@ -1,8 +1,9 @@
-﻿
-<div jx-panel="search-results">
+﻿<div jx-panel="search-results">
 
-    <div>
-        You searched for "<?php echo $_POST['search'] ?>".
-    </div>
+    <script>
+        lojax.in( function ( request ) {
+            $( this ).append( 'You search for "' + request.form[0].value + '".' );
+        } );
+    </script>
 
 </div>

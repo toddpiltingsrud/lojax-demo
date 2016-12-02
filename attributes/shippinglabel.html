@@ -1,35 +1,32 @@
-<?php
-#checkaddress.html
-include_once('../nocache.html');
-require_once('../lib/BootstrapModal.html');
-# trick to execute 1st time, but not 2nd so you don't have an inf loop
-if (!isset($TPL)) {
+<div class="modal fade" role="dialog" aria-labelledby="modalHeader" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" jx-panel="modalHeader">
+                    Shipping Label
+                </h4>
+            </div>
+            <div class="modal-body" jx-panel="modalBody">
+            </div>
+            <div class="modal-footer" jx-panel="modalFooter">
+                <button class="btn btn-primary" data-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
 
-    $TPL = new BootstrapModal();
+    <script>
+        lojax.in( function ( request ) {
+            var form = $( request.form ).serializeArray();
+            var html = [];
+            html.push( '<table class="table">' );
+            $(form).each( function () {
+                html.push( '<tr><th>' + this.name + '</th>' );
+                html.push( '<td>' + this.value + '</td></tr>' );
+            } );
+            html.push( '</table>' );
+            $( this).find('.modal-body').append( html.join( '' ) );
+        } );
+    </script>
 
-    ob_start();
-    include "shippinglabel.html";
-    $form = ob_get_contents();
-    ob_end_clean();
-
-    $TPL->Header = "Shipping Label";
-    $TPL->Body = $form;
-    require "../layouts/BootstrapModal.html";
-    exit;
-}
-?>
-<div jx-panel="form">
-    <table class="table">
-        <tbody>
-            <tr><th>Name</th><td>Todd Piltingsrud</td></tr>
-            <tr><th>Address</th><td>123 Any Street</td></tr>
-            <tr><th>City</th><td>Minneapolis</td></tr>
-            <tr><th>State</th><td>MN</td></tr>
-            <tr><th>Zip</th><td>12345</td></tr>
-            <tr><th>Weight</th><td>5</td></tr>
-            <tr><th>ShippingSpeed</th><td>Ground</td></tr>
-            <tr><th>SundayDelivery</th><td>false</td></tr>
-            <tr><th>SignatureRequired</th><td>false</td></tr>
-        </tbody>
-    </table>
 </div>

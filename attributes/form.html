@@ -52,12 +52,10 @@
                 <div class="form-group">
                     <label for="name">Sunday Delivery</label>
                     <input type="checkbox" name="SundayDelivery" class="form-control" value="true" />
-                    <input type="hidden" name="SundayDelivery" value="false" />
                 </div>
                 <div class="form-group">
                     <label for="name">Signature Required</label>
-                    <input type="checkbox" name="SignatureRequired" class="form-control" />
-                    <input type="hidden" name="SignatureRequired" value="false" />
+                    <input type="checkbox" name="SignatureRequired" class="form-control" value="true" />
                 </div>
             </div>
         </form>
@@ -66,12 +64,12 @@
             <button type="button" 
                     class="btn btn-default" 
                     jx-action="attributes/checkaddress.html"
-                    jx-method="ajax-post" 
+                    jx-method="ajax-get" 
                     jx-form="form > div:first-child">Check Address</button>
             <button type="button" 
                     class="btn btn-primary" 
                     jx-action="attributes/shippinglabel.html"
-                    jx-method="ajax-post" 
+                    jx-method="ajax-get" 
                     jx-form="form">Shipping Label</button>
         </div>
     </div>
