@@ -1,0 +1,29 @@
+﻿<div jx-panel="right">
+
+    <h3>jx-then</h3>
+
+    <p>
+        Supply the name of a callback function to execute when an AJAX call completes successfully.
+        <br />
+        Complex paths are supported (e.g. <code>fns.callback</code>).
+    </p>
+
+    <button type="button"
+            class="btn btn-primary"
+            jx-method="ajax-get"
+            jx-action="attributes/then2.html"
+            jx-then="fns.callback">
+        This button specifies "<code>fns.callback</code>" as a callback.
+    </button>
+
+    <script>
+        var fns = fns || {};
+
+        fns.callback = function ( request ) {
+
+            $( 'div[jx-panel=right]' ).append( '<div class="well">AJAX call completed successfully</div>' );
+
+        };
+    </script>
+
+</div>

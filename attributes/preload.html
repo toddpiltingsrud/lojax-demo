@@ -1,0 +1,22 @@
+﻿
+<div jx-panel="right">
+
+    <h3>jx-preload</h3>
+
+    <p>
+        While you've been reading this page, lojax has queued up a request for the link below.
+        When you click the link, lojax will note that it was marked for pre-loading and check the queue for it.
+        If one is found, it'll grab it off the queue instead of creating a new one and attach 'then' and 'catch' callbacks to it.
+    </p>
+
+    <p>
+        After the resource is requested by the user, it is immediately removed from the queue.
+        So subsequent requests will execute as usual.
+    </p>
+
+    <a href="attributes/preload2.html" jx-method="ajax-get" jx-preload>Click me</a>
+
+    <div class="well" jx-panel="cache2" style="margin-top:10px"></div>
+
+    
+</div>

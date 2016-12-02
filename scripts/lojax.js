@@ -3,10 +3,8 @@
 var lojax = lojax || {};
 
 (function($, jx) { 
-    
-    /***********\
-        API
-    \***********/
+    // prevent this script from running more than once
+    if ( jx.Controller ) return;
     
     var priv = {};
     var rexp = {};
@@ -14,6 +12,11 @@ var lojax = lojax || {};
     jx.Transitions = {};
     var instance = jx.Controller;
     jx.priv = priv;
+    
+    
+    /***********\
+        API
+    \***********/
     
     // handle an arbitrary event and execute a request
     jx.on = function ( event, params ) {
@@ -52,7 +55,6 @@ var lojax = lojax || {};
             if ( priv.hasValue( instance.modal ) ) {
                 instance.modal.off( 'hidden.bs.modal', instance.onModalClose );
                 instance.modal.modal( 'hide' );
-                $( instance.modal ).remove();
                 instance.modal = null;
             }
         } );
@@ -66,15 +68,9 @@ var lojax = lojax || {};
             else if ( $.fn.kendoWindow ) {
                 instance.modal.data( 'kendoWindow' ).close();
             }
-            instance.modal = null;
+            // don't set instance.modal to null here or the close handlers in controller won't fire
         }
     };
-    
-    // This action is executed when a browser nav button is clicked
-    // which changes window.location.hash to an empty string.
-    // This can be a url, a config object for creating a new request, 
-    // or a function which returns a url or config object.
-    jx.emptyHashAction = null;
     
     jx.events = {
         beforeSubmit: 'beforeSubmit',
@@ -87,26 +83,58 @@ var lojax = lojax || {};
         ajaxError: 'ajaxError'
     };
     
+    Object.getOwnPropertyNames( jx.events ).forEach( function ( prop ) {
+        jx[prop] = function ( handler ) {
+            if ( typeof handler == 'function' ) {
+                $( document ).on( lojax.events[prop], handler );
+            }
+        };
+    } );
+    
     jx.config = {
         prefix: 'jx-',
         transition: 'fade-in',
-        navHistory: true
+        navHistory: false,
+        setNavHistory: function(b) {
+            jx.config.navHistory = b;
+            b ? window.addEventListener( "hashchange", jx.Controller.handleHash, false )
+              : window.removeEventListener( "hashchange", jx.Controller.handleHash, false );
+        },
+        // This action is executed when a browser nav button is clicked
+        // which changes window.location.hash to an empty string.
+        // This can be a url, a config object for creating a new request, 
+        // or a function which returns a url or config object.
+        emptyHashAction: null
     };
     
     jx.select = {
-        methodOrRequest: '[data-request],[jx-request],[data-method]:not([data-trigger]),[jx-method]:not([jx-trigger])',
-        methodWithChange: '[data-method][data-trigger*=change],[jx-method][jx-trigger*=change]',
-        methodWithEnterOrModel: '[data-method][data-trigger*=enter],[jx-method][jx-trigger*=enter],[data-model],[jx-model]',
+        methodOrRequest: [
+            '[data-request]',
+            '[jx-request]',
+            '[data-method]:not([data-trigger])',
+            '[jx-method]:not([jx-trigger])'].join(','),
+        methodWithChange: [
+            '[data-method][data-trigger*=change]',
+            '[jx-method][jx-trigger*=change]'].join(','),
+        methodWithEnterOrModel: [
+            '[data-method][data-trigger*=enter]',
+            '[jx-method][jx-trigger*=enter]',
+            '[data-model]',
+            '[jx-model]'].join(','),
         formWithMethod: 'form[data-method],form[jx-method]',
         model: '[data-model],[jx-model]',
-        panel: function ( id ) {
-            return '[' + jx.config.prefix + 'panel="' + id + '"],[data-panel="' + id + '"]';
-        },
         src: '[data-src],[jx-src]',
         preload: '[data-preload],[jx-preload]',
         jxModelAttribute: '[jx-model]',
         jxModel: 'jx-model',
-        inputTriggerChangeOrEnter: ':input[name][jx-trigger*=change],:input[name][data-trigger*=change],:input[name][jx-trigger*=enter],:input[name][data-trigger*=enter]'
+        inputTriggerChangeOrEnter: [
+            ':input[name][jx-trigger*=change]',
+            ':input[name][data-trigger*=change]',
+            ':input[name][jx-trigger*=enter]',
+            ':input[name][data-trigger*=enter]'].join(','),
+        panel: function ( id ) {
+            return '[' + lojax.config.prefix + 'panel="' + id + '"],[data-panel="' + id + '"]';
+        }
     };
     
     /***********\
@@ -133,7 +161,7 @@ var lojax = lojax || {};
                 self.preloadAsync();
     
                 // check window.location.hash for valid hash
-                if ( priv.hasHash() ) {
+                if ( jx.config.navHistory && priv.hasHash() ) {
                     setTimeout( self.handleHash );
                 }
             } );
@@ -148,7 +176,9 @@ var lojax = lojax || {};
                 .on( 'keydown', jx.select.methodWithEnterOrModel, this.handleEnterKey )
                 .on( 'submit', jx.select.formWithMethod, this.handleRequest )
                 // handle the control key
-                .on( 'keydown', this.handleControlKey ).on( 'keyup', this.handleControlKey );
+                .on( 'keydown', this.handleControlKey ).on( 'keyup', this.handleControlKey )
+                .on( lojax.events.beforeRequest, this.disableButton )
+                .on( lojax.events.afterRequest, this.enableButton );
             if ( jx.config.navHistory ) {
                 window.addEventListener( "hashchange", this.handleHash, false );
             }
@@ -161,10 +191,21 @@ var lojax = lojax || {};
                 .off( 'keydown', this.handleEnterKey )
                 .off( 'submit', this.handleRequest )
                 .off( 'keydown', this.handleControlKey )
-                .off( 'keyup', this.handleControlKey );
+                .off( 'keyup', this.handleControlKey )
+                .off( lojax.events.beforeRequest, this.disableButton )
+                .off( lojax.events.afterRequest, this.enableButton );
             if ( jx.config.navHistory ) {
                 window.removeEventListener( "hashchange", this.handleHash, false );
             }
+        },
+    
+        disableButton: function ( evt, arg ) {
+            // prevent users from double-clicking, timeout of 30 seconds
+            if ( arg.eventType == 'click' ) priv.disable( arg.source, 30 );
+        },
+    
+        enableButton: function ( evt, arg ) {
+            priv.enable( arg.source );
         },
     
         handleRequest: function ( evt ) {
@@ -175,9 +216,10 @@ var lojax = lojax || {};
             var params = priv.getConfig( this ),
                 $this = $( this );
     
+            // preserve the event type so we can disable buttons
+            params.eventType = evt.type;
     
             var request = new jx.Request( params );
-    
     
             try {
                 // delegate hashes to handleHash
@@ -212,6 +254,7 @@ var lojax = lojax || {};
                 }
             }
             catch ( ex ) {
+                priv.enable( $this );
                 jx.error( ex );
             }
     
@@ -232,13 +275,11 @@ var lojax = lojax || {};
     
         handleHash: function () {
     
-    
             if ( !jx.config.navHistory ) return;
     
             // grab the current hash and request it with ajax-get
     
             var handler, request, hash = window.location.hash;
-    
     
             if ( priv.hasHash() ) {
     
@@ -287,10 +328,17 @@ var lojax = lojax || {};
             request
                 .then( function ( response ) {
                     instance.injectContent( request, response );
-                    // if the request has a poll interval, handle it after the request has been successfully processed
+                    // if the request has a poll interval, handle it after the request has been processed
+                    instance.handlePolling( request );
+                    priv.enable( $( request.source ) );
+                } )
+                .catch( function ( e ) {
+                    priv.enable( $( request.source ) );
+                    instance.handleError( e, request );
+                    // handle polling even if there was an error
                     instance.handlePolling( request );
                 } )
-                .catch( instance.handleError );
+                .then( request.callbacks.then, request.callbacks['catch'] );
         },
     
         injectContent: function ( request, response ) {
@@ -445,6 +493,7 @@ var lojax = lojax || {};
                 // find elements that are supposed to be pre-loaded
                 $( root ).find( jx.select.preload ).each( function () {
                     config = priv.getConfig( this );
+                    config.method = config.method || 'ajax-get';
                     config.suppressEvents = true;
                     request = new jx.Request( config );
                     // if it's got a valid action that hasn't already been cached, cache and execute
@@ -485,15 +534,18 @@ var lojax = lojax || {};
             instance.preloadAsync( context );
         },
     
-        handleError: function ( response ) {
+        handleError: function ( response, request ) {
             priv.triggerEvent( jx.events.ajaxError, response );
             if ( response.handled ) return;
-            var error = [];
-            Object.getOwnPropertyNames( response ).forEach( function ( name ) {
-                if ( typeof response[name] !== 'function' ) {
-                    error.push( response[name] );
+            // filter out authentication errors, those are usually handled by the browser
+            if ( response.status
+                && /^(4\d\d|5\d\d)/.test( response.status )
+                && /401|403|407/.test( response.status ) == false ) {
+                if ( !request || !request.suppressEvents ) {
+                    alert( 'An error occurred while processing your request.' );
                 }
-            } );
+                if ( window.console && window.console.error ) window.console.error( response );
+            }
         }
     
     } );
@@ -545,8 +597,11 @@ var lojax = lojax || {};
     
     $.extend(rexp, {
         search: /\?.+(?=#)|\?.+$/,
-        hash: /#((.*)?[a-z]{2}(.*)?)/i,
-        json: /^\{.*\}$|^\[.*\]$/
+        hash: /#((.*)?[a-z]{2}\/[a-z]{2}(.*)?)/i,
+        json: /^\{.*\}$|^\[.*\]$/,
+        splitPath: /[^\[\]\.\s]+|\[\d+\]/g,
+        indexer: /\[\d+\]/,
+        quoted: /^['"].+['"]$/
     } );
     
     $.extend( priv, {
@@ -561,7 +616,7 @@ var lojax = lojax || {};
         attrSelector: function ( name ) {
             return '[data-' + name + '],[' + jx.config.prefix + name + ']';
         },
-        attributes: 'method action transition target form model preload src poll'.split( ' ' ),
+        attributes: 'method action transition target form model preload src poll then catch'.split( ' ' ),
         getConfig: function ( elem ) {
             var name, config, $this = $( elem );
     
@@ -584,6 +639,20 @@ var lojax = lojax || {};
             config.source = elem;
     
             return config;
+        },
+        disable: function ( elem, seconds ) {
+            elem = $( elem );
+            elem.attr( 'disabled', 'disabled' ).addClass( 'disabled busy' );
+            if ( typeof seconds == 'number' && seconds > 0 ) {
+                setTimeout( function () {
+                    priv.enable( elem );
+                }, seconds * 1000 );
+            }
+        },
+        enable: function ( elem ) {
+            elem = elem || $( '[disabled].disabled.busy' );
+            elem = $( elem );
+            elem.removeAttr( 'disabled' ).removeClass( 'disabled busy' );
         },
         resolveAction: function ( params ) {
             var action;
@@ -877,6 +946,48 @@ var lojax = lojax || {};
         },
         isJSON: function ( str ) {
             return rexp.json.test( str );
+        },
+        getFunctionAtPath: function ( path, root ) {
+            if ( !path ) return path;
+    
+            path = Array.isArray( path ) ? path : path.match( rexp.splitPath );
+    
+            if ( path[0] === 'window' ) path = path.splice( 1 );
+    
+            // o is our placeholder
+            var o = root || window,
+                segment;
+    
+            for ( var i = 0; i < path.length; i++ ) {
+                // is this segment an array index?
+                segment = path[i];
+                if ( rexp.indexer.test( segment ) ) {
+                    // convert to int
+                    segment = parseInt( /\d+/.exec( segment ) );
+                }
+                else if ( rexp.quoted.test( segment ) ) {
+                    segment = segment.slice( 1, -1 );
+                }
+    
+                o = o[segment];
+    
+                if ( o === undefined ) return;
+            }
+    
+            return o;
+        },
+        callFunctionArray: function ( functions, context, arg ) {
+            if ( Array.isArray( functions ) ) {
+                functions.forEach( function (fn) {
+                    if ( typeof fn === 'function' ) {
+                        try {
+                            fn.call( context, arg );
+                        } catch ( e ) {
+                            jx.error( e );
+                        }
+                    }
+                } );
+            }
         }
     
     } );
@@ -886,6 +997,7 @@ var lojax = lojax || {};
     \***********/
     
     jx.Request = function ( obj ) {
+    
         if ( typeof obj === 'function' ) {
             obj = obj();
         }
@@ -908,12 +1020,17 @@ var lojax = lojax || {};
         this.data = this.getData( obj );
         this.source = obj.source;
         this.preload = 'preload' in obj;
+        this.eventType = obj.eventType;
         this.cancel = false;
-        this.resolve = null;
-        this.reject = null;
+        this.resolve = [];
+        this.reject = [];
         this.result = null;
         this.error = null;
         this.suppressEvents = obj.suppressEvents || false;
+        this.callbacks = {
+            then: priv.getFunctionAtPath( obj.then ),
+            'catch': priv.getFunctionAtPath( obj['catch'] )
+        };
     };
     
     jx.Request.prototype = {
@@ -985,12 +1102,12 @@ var lojax = lojax || {};
         },
         done: function ( response ) {
             this.result = response;
-            if ( this.resolve ) this.resolve( response );
+            priv.callFunctionArray( this.resolve, this, response );
             priv.afterRequest( this, this.suppressEvents );
         },
         fail: function ( error ) {
             this.error = error;
-            if ( this.reject ) this.reject( error );
+            priv.callFunctionArray( this.reject, this, error );
             priv.afterRequest( this, this.suppressEvents );
         },
         methods: {
@@ -1047,6 +1164,9 @@ var lojax = lojax || {};
             if ( !priv.hasValue( this.methods[this.method] ) ) throw 'Unsupported method: ' + this.method;
     
             if ( priv.hasValue( this.action ) && this.action !== '' ) {
+                // don't trigger any events for beforeSubmit
+                // it's typically used as a validation hook
+                // if validation fails we want lojax to take no action at all
                 priv.beforeSubmit( this );
                 if ( this.cancel ) return;
                 priv.beforeRequest( this, this.suppressEvents );
@@ -1060,24 +1180,24 @@ var lojax = lojax || {};
                     priv.afterRequest( this, this.suppressEvents );
                 }
             }
+    
             return this;
         },
     
         // fake promise
         then: function ( resolve, reject ) {
-            var self = this;
             if ( typeof resolve === 'function' ) {
-                this.resolve = resolve;
+                this.resolve.push( resolve );
                 if ( this.result !== null ) {
                     // the response came before calling this function
-                    resolve( self.result );
+                    resolve.call( this, this.result );
                 }
             }
             if ( typeof reject === 'function' ) {
-                this.reject = reject;
+                this.reject.push( reject );
                 if ( this.error !== null ) {
                     // the response came before calling this function
-                    reject( self.error );
+                    reject.call( this, this.error );
                 }
             }
             return this;
@@ -1094,8 +1214,8 @@ var lojax = lojax || {};
                 this.error = null;
             }
             this.cancel = false;
-            this.resolve = null;
-            this.reject = null;
+            this.resolve = [];
+            this.reject = [];
         }
     
     };
@@ -1146,7 +1266,6 @@ var lojax = lojax || {};
         }
     
     } );
-	
 	
 	/***********\
 	  modeling
@@ -1306,13 +1425,11 @@ var lojax = lojax || {};
 	            val,
 	            segments;
 	
-	
 	        // derive an object path from the input name
 	        segments = priv.getPathSegments( $( elems ).attr( 'name' ) );
 	
 	        // get the raw value
 	        val = priv.getValue( elems );
-	
 	
 	        // grab the object we're setting
 	        obj = priv.getObjectAtPath( model, segments, Array.isArray( val ) );

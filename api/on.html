@@ -1,0 +1,29 @@
+﻿
+<div jx-panel="right">
+
+    <h3>lojax.on(event, selector, callback);</h3>
+
+    <p>
+        Execute a request in response to an event.
+        This is just shorthand for jQuery's "on" function.
+    </p>
+
+    <script>
+        lojax.in (function () {
+            lojax.on('click', 'body', {
+                action:'/CurrentTime.html',
+                method:'ajax-get',
+                transition:'append-node',
+                target:'#the-div-below'
+            });
+        });
+        lojax.out (function () {
+            lojax.off('click', 'body');
+        });
+    </script>
+
+    <div id="highlighter_182222" class="syntaxhighlighter  html"><div class="toolbar"><span><a href="#" class="toolbar_item command_help help">?</a></span></div><table border="0" cellpadding="0" cellspacing="0"><tbody><tr><td class="gutter"><div class="line number1 index0 alt2">1</div><div class="line number2 index1 alt1">2</div><div class="line number3 index2 alt2">3</div><div class="line number4 index3 alt1">4</div><div class="line number5 index4 alt2">5</div><div class="line number6 index5 alt1">6</div></td><td class="code"><div class="container"><div class="line number1 index0 alt2"><code class="html plain">lojax.on('click', 'body', {</code></div><div class="line number2 index1 alt1"><code class="html spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="html plain">action:'api/on2.html',</code></div><div class="line number3 index2 alt2"><code class="html spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="html plain">method:'ajax-get',</code></div><div class="line number4 index3 alt1"><code class="html spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="html plain">transition:'append',</code></div><div class="line number5 index4 alt2"><code class="html spaces">&nbsp;&nbsp;&nbsp;&nbsp;</code><code class="html plain">target:'#the-div-below'</code></div><div class="line number6 index5 alt1"><code class="html plain">});</code></div></div></td></tr></tbody></table></div>
+
+    <div id="the-div-below" class="well"></div>
+
+</div>

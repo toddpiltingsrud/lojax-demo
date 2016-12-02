@@ -1,0 +1,29 @@
+﻿<div jx-panel="right">
+
+    <h3>jx-catch</h3>
+
+    <p>
+        Supply the name of a callback function to execute when an AJAX call fails.
+        <br />
+        Complex paths are supported (e.g. <code>fns.errorCallback</code>).
+    </p>
+
+    <button type="button"
+            class="btn btn-primary"
+            jx-method="ajax-get"
+            jx-action="attributes/doesnotexist.html"
+            jx-catch="fns.errorCallback">
+        This button specifies "<code>fns.errorCallback</code>" as a failure callback.
+    </button>
+
+    <script>
+        var fns = fns || {};
+
+        fns.errorCallback = function ( err ) {
+
+            alert( 'An error occurred while processing your request.' );
+
+        };
+    </script>
+
+</div>

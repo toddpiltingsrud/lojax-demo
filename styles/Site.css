@@ -264,8 +264,8 @@ ul.nav > li > a:focus > span.glyphicon {
   border-color: #404040;
   background-color: #404040;
 }
-ul.nav > li > a.active + ul,
-ul.nav > li > a:focus + ul {
+ul.nav > li > a.active + div > ul,
+ul.nav > li > a:focus + div > ul {
   visibility: visible;
   opacity: 1.0;
 }

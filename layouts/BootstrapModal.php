@@ -1,6 +1,6 @@
 <?php
-#BootstrapModal.php
-require_once('../lib/BootstrapModal.php');
+#BootstrapModal.html
+require_once('../lib/BootstrapModal.html');
  /*
     lojax will only create one modal at a time.
     So if another is requested while a modal is already being displayed,
