@@ -18,6 +18,7 @@
     <script>
         lojax.in( function ( request ) {
             var form = $( request.form ).serializeArray();
+            console.log( form );
             var html = [];
             html.push( '<table class="table">' );
             $(form).each( function () {

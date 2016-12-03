@@ -8,22 +8,53 @@
         Complex paths are supported (e.g. <code>fns.errorCallback</code>).
     </p>
 
-    <button type="button"
-            class="btn btn-primary"
-            jx-method="ajax-get"
-            jx-action="attributes/doesnotexist.html"
-            jx-catch="fns.errorCallback">
-        This button specifies "<code>fns.errorCallback</code>" as a failure callback.
-    </button>
+    <div id="btn-container">
+        <button type="button"
+                class="btn btn-primary"
+                jx-method="ajax-get"
+                jx-action="attributes/doesnotexist.html"
+                jx-catch="fns.errorCallback">
+            This button specifies "<code>fns.errorCallback</code>" as a failure callback.
+        </button>
+    </div>
 
     <script>
         var fns = fns || {};
+        var chars = [/&/g, /</g, />/g, /"/g, /'/g, /`/g];
+        var escaped = ['&amp;', '&lt;', '&gt;', '&quot;', '&apos;', '&#96;'];
+
+        fns.escapeHTML = function ( obj ) {
+            if ( typeof obj !== 'string' ) {
+                return obj;
+            }
+            chars.forEach( function ( char, i ) {
+                obj = obj.replace( char, escaped[i] );
+            } );
+            return obj;
+        };
 
         fns.errorCallback = function ( err ) {
-
-            alert( 'An error occurred while processing your request.' );
-
+            $( '[jx-panel=right] pre' ).fadeIn();
         };
     </script>
+
+    <pre class="well" style="display:none;margin-top:20px;">
+&lt;script>
+    var fns = fns || {};
+    fns.errorCallback = function ( err ) {
+        $( '[jx-panel=right] pre' ).fadeIn();
+    };
+&lt;/script>
+
+&lt;pre class="well" style="display:none;margin-top:20px;">
+    &lt;button type=&quot;button&quot; 
+        class=&quot;btn btn-primary&quot; 
+        jx-method=&quot;ajax-get&quot; 
+        jx-action=&quot;attributes/doesnotexist.html&quot; 
+        jx-catch=&quot;fns.errorCallback&quot;&gt;
+        This button specifies &quot;&lt;code&gt;fns.errorCallback&lt;/code&gt;&quot; as a failure callback.
+    &lt;/button&gt;    
+&lt;/pre>
+</pre>
 
 </div>

@@ -1,0 +1,10 @@
+﻿<script>
+    lojax.in( function () {
+        var ar = [];
+        var dt = new Date();
+        ar.push( dt.getHours() );
+        ar.push( dt.getMinutes() );
+        ar.push( dt.getSeconds() );
+        $( this ).html( ar.join(':') );
+    } );
+</script>
